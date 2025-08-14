@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestão de Acordos Trabalhistas v4.2</title>
+    <title>Gestão de Acordos Trabalhistas v3.1</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -52,6 +52,13 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        .radio-label input:checked + div {
+            border-color: var(--color-primary);
+            background-color: #eff6ff;
+        }
+        .radio-label input:checked + div h3 {
+            color: var(--color-primary-hover);
+        }
         #notification-container {
             position: fixed;
             bottom: 1.5rem;
@@ -75,73 +82,28 @@
         .toast.show { opacity: 1; transform: translateX(0); }
         .toast.success { background-color: var(--color-success); }
         .toast.error { background-color: var(--color-error); }
+        .toast.info { background-color: var(--color-primary); }
+        input.invalid { border-color: var(--color-error); }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
 
-    <!-- Container de Autenticação -->
-    <div id="auth-container" class="flex items-center justify-center min-h-screen">
-        <div class="w-full max-w-md">
-            <!-- Formulário de Login -->
-            <div id="login-view">
-                <div class="bg-white p-8 rounded-lg shadow-md">
-                    <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Login</h2>
-                    <form id="form-login">
-                        <div class="mb-4">
-                            <label for="login-email" class="block text-sm font-medium text-gray-700">Email</label>
-                            <input type="email" id="login-email" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                        </div>
-                        <div class="mb-6">
-                            <label for="login-password" class="block text-sm font-medium text-gray-700">Senha</label>
-                            <input type="password" id="login-password" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                        </div>
-                        <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Entrar</button>
-                    </form>
-                    <p class="mt-4 text-center text-sm text-gray-600">
-                        Não tem uma conta? <a href="#" id="show-register-view" class="font-medium text-blue-600 hover:text-blue-500">Registe-se</a>
-                    </p>
-                </div>
+    <!-- Container Principal -->
+    <div id="app-container" class="p-4 md:p-8 max-w-7xl mx-auto">
+        
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">Gestão de Acordos Trabalhistas</h1>
+            <p class="text-gray-600 mt-1">Seu painel central para controle de recebimentos e repasses.</p>
+            <div id="auth-status" class="mt-2 text-sm text-gray-500">
+                <p>Conectando ao banco de dados...</p>
             </div>
-            <!-- Formulário de Registo -->
-            <div id="register-view" class="hidden">
-                <div class="bg-white p-8 rounded-lg shadow-md">
-                    <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Criar Conta</h2>
-                    <form id="form-register">
-                        <div class="mb-4">
-                            <label for="register-email" class="block text-sm font-medium text-gray-700">Email</label>
-                            <input type="email" id="register-email" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                        </div>
-                        <div class="mb-6">
-                            <label for="register-password" class="block text-sm font-medium text-gray-700">Senha (mínimo 6 caracteres)</label>
-                            <input type="password" id="register-password" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                        </div>
-                        <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Criar Conta</button>
-                    </form>
-                    <p class="mt-4 text-center text-sm text-gray-600">
-                        Já tem uma conta? <a href="#" id="show-login-view" class="font-medium text-blue-600 hover:text-blue-500">Faça login</a>
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Container Principal da Aplicação (inicialmente escondido) -->
-    <div id="app-container" class="p-4 md:p-8 max-w-7xl mx-auto hidden">
-        <header class="mb-8 flex justify-between items-start">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-900">Gestão de Acordos Trabalhistas</h1>
-                <p class="text-gray-600 mt-1">Seu painel central para controle de recebimentos e repasses.</p>
-                <div id="auth-status" class="mt-2 text-sm text-gray-500"></div>
-            </div>
-            <button id="btn-logout" class="bg-red-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-600 transition duration-300 flex items-center justify-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" /></svg>
-                Sair
-            </button>
         </header>
+
         <div id="loading-screen" class="fixed inset-0 bg-white bg-opacity-75 flex flex-col items-center justify-center z-50">
             <div class="loader"></div>
-            <p class="mt-4 text-lg font-semibold text-gray-700">A carregar dados...</p>
+            <p class="mt-4 text-lg font-semibold text-gray-700">Carregando dados...</p>
         </div>
+
         <section id="dashboard" class="mb-8">
             <h2 class="text-2xl font-semibold mb-4 text-gray-800">Dashboard</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -155,21 +117,22 @@
                 <div class="bg-white p-5 rounded-lg card-shadow"><h3 class="text-lg font-semibold mb-2">Próximos 5 Vencimentos</h3><ul id="proximos-vencimentos" class="space-y-2"><li class="text-gray-500">Nenhum vencimento próximo.</li></ul></div>
             </div>
         </section>
+
         <section id="acordos">
-            <div class="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-4">
+            <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-3 mb-4">
                 <h2 class="text-2xl font-semibold text-gray-800">Acordos</h2>
-                <div class="flex-grow md:max-w-sm">
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd" /></svg>
-                        </div>
-                        <input type="search" id="search-acordos" placeholder="Pesquisar por cliente ou processo..." class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                <div class="flex w-full md:w-auto items-center gap-2">
+                    <div class="relative flex-1 md:w-80">
+                        <input id="acordos-search" type="text" placeholder="Pesquisar por cliente ou processo..." class="w-full border-gray-300 rounded-lg shadow-sm pl-9 pr-3 py-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 text-gray-400 absolute left-2.5 top-2.5">
+                            <path fill-rule="evenodd" d="M10.5 3.75a6.75 6.75 0 1 0 4.243 11.964l4.271 4.272a.75.75 0 1 0 1.06-1.06l-4.272-4.271A6.75 6.75 0 0 0 10.5 3.75Zm-5.25 6.75a5.25 5.25 0 1 1 10.5 0 5.25 5.25 0 0 1-10.5 0Z" clip-rule="evenodd" />
+                        </svg>
                     </div>
+                    <button id="btn-add-acordo" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                        Adicionar Acordo
+                    </button>
                 </div>
-                <button id="btn-add-acordo" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300 flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
-                    Adicionar Acordo
-                </button>
             </div>
             <div id="acordos-list" class="bg-white rounded-lg card-shadow overflow-hidden">
                 <div class="p-8 text-center text-gray-500">Nenhum acordo cadastrado.</div>
@@ -177,7 +140,7 @@
         </section>
     </div>
 
-    <!-- Modals (Acordo, Pagamento, Repasse) -->
+    <!-- Modals -->
     <div id="modal-acordo" class="modal fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-20">
         <div class="bg-white rounded-lg p-8 w-full max-w-4xl max-h-screen overflow-y-auto">
             <h2 class="text-2xl font-bold mb-6">Novo Acordo</h2>
@@ -219,7 +182,7 @@
     </div>
     <div id="modal-pagamento" class="modal fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-30">
         <div class="bg-white rounded-lg p-8 w-full max-w-lg">
-            <h2 class="text-2xl font-bold mb-6">Registar Pagamento</h2>
+            <h2 class="text-2xl font-bold mb-6">Registrar Pagamento</h2>
             <form id="form-pagamento" novalidate>
                 <input type="hidden" id="pagamento-acordo-id">
                 <div><label for="pagamento-valor" class="block text-sm font-medium text-gray-700">Valor Total Recebido</label><input type="number" id="pagamento-valor" step="0.01" min="0.01" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></div>
@@ -236,7 +199,7 @@
                 <div class="flex justify-end mt-6 space-x-4">
                     <button type="button" id="btn-cancel-pagamento" class="bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300">Cancelar</button>
                     <button type="submit" class="bg-green-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-700 flex items-center justify-center gap-2">
-                        <span class="btn-text">Registar</span>
+                        <span class="btn-text">Registrar</span>
                         <div class="btn-spinner hidden"></div>
                     </button>
                 </div>
@@ -245,17 +208,17 @@
     </div>
     <div id="modal-repasse" class="modal fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-30">
         <div class="bg-white rounded-lg p-8 w-full max-w-lg">
-            <h2 class="text-2xl font-bold mb-2">Registar Repasse para Cliente</h2>
+            <h2 class="text-2xl font-bold mb-2">Registrar Repasse para Cliente</h2>
             <p id="repasse-info-cliente" class="text-gray-600 mb-6"></p>
             <form id="form-repasse" novalidate>
                 <input type="hidden" id="repasse-acordo-id">
                 <div><label for="repasse-valor" class="block text-sm font-medium text-gray-700">Valor Repassado</label><input type="number" id="repasse-valor" step="0.01" min="0.01" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></div>
                 <div class="mt-4"><label for="repasse-data" class="block text-sm font-medium text-gray-700">Data do Repasse</label><input type="date" id="repasse-data" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></div>
-                <div class="mt-4"><label for="obs-repasse" class="block text-sm font-medium text-gray-700">Observações (ex: comprovativo)</p><textarea id="obs-repasse" rows="2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></textarea></div>
+                <div class="mt-4"><label for="obs-repasse" class="block text-sm font-medium text-gray-700">Observações (ex: comprovante)</p><textarea id="obs-repasse" rows="2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></textarea></div>
                 <div class="flex justify-end mt-6 space-x-4">
                     <button type="button" id="btn-cancel-repasse" class="bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300">Cancelar</button>
                     <button type="submit" class="bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-purple-700 flex items-center justify-center gap-2">
-                        <span class="btn-text">Registar</span>
+                        <span class="btn-text">Registrar</span>
                         <div class="btn-spinner hidden"></div>
                     </button>
                 </div>
@@ -270,30 +233,27 @@
     <script type="module">
         // Importações do Firebase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, addDoc, onSnapshot, collection, query, where, writeBatch, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        /**
+         * Módulo principal da aplicação.
+         * Organiza o estado, serviços, UI e listeners para uma arquitetura robusta.
+         */
         const AppController = {
             state: {
                 userId: null,
-                userEmail: null,
                 isAuthReady: false,
-                isFirebaseInitialized: false,
                 acordos: [],
-                searchTerm: '',
                 acordoDetailsCache: new Map(),
                 chartInstance: null,
+                searchQuery: '',
             },
 
             elements: {
-                authContainer: document.getElementById('auth-container'),
-                appContainer: document.getElementById('app-container'),
-                loginView: document.getElementById('login-view'),
-                registerView: document.getElementById('register-view'),
                 loadingScreen: document.getElementById('loading-screen'),
                 authStatus: document.getElementById('auth-status'),
                 acordosList: document.getElementById('acordos-list'),
-                searchInput: document.getElementById('search-acordos'),
                 dashboard: {
                     receitaMes: document.getElementById('receita-mes'),
                     parcelasAtraso: document.getElementById('parcelas-atraso'),
@@ -302,56 +262,17 @@
                     proximosVencimentos: document.getElementById('proximos-vencimentos'),
                     chartCanvas: document.getElementById('receitaMensalChart'),
                 },
+                modals: {
+                    acordo: document.getElementById('modal-acordo'),
+                    pagamento: document.getElementById('modal-pagamento'),
+                    repasse: document.getElementById('modal-repasse'),
+                },
                 forms: {
-                    login: document.getElementById('form-login'),
-                    register: document.getElementById('form-register'),
                     acordo: document.getElementById('form-acordo'),
                     pagamento: document.getElementById('form-pagamento'),
                     repasse: document.getElementById('form-repasse'),
-                }
-            },
-
-            init() {
-                const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
-                const appId = typeof __app_id !== 'undefined' ? __app_id : 'gestao-acordos-default';
-
-                if (!firebaseConfig) {
-                    document.body.innerHTML = `<div class="text-center p-8 text-red-600 font-semibold">Erro Crítico: Configuração do Firebase não encontrada.<br>Certifique-se de que está a fazer o deploy para o Firebase Hosting para que as chaves de configuração sejam injetadas automaticamente.</div>`;
-                    return;
-                }
-                
-                this.services.firebase.init(firebaseConfig, appId);
-                this.listeners.init();
-            },
-
-            handleAuthStateChange(user) {
-                if (user) {
-                    this.state.userId = user.uid;
-                    this.state.userEmail = user.email;
-                    this.state.isAuthReady = true;
-                    this.elements.authStatus.innerHTML = `<p class="text-gray-600">Utilizador: <span class="font-semibold">${user.email}</span></p>`;
-                    this.services.firebase.listenToAcordos(this.onAcordosUpdate.bind(this));
-                    this.ui.showAppView();
-                } else {
-                    this.state.userId = null;
-                    this.state.userEmail = null;
-                    this.state.isAuthReady = false;
-                    this.state.acordos = [];
-                    this.ui.renderAcordosList();
-                    this.ui.showAuthView();
-                }
-            },
-            
-            onAcordosUpdate(acordos) {
-                this.state.acordos = acordos;
-                this.state.acordoDetailsCache.clear();
-                this.ui.renderAcordosList();
-                this.ui.updateDashboard();
-                this.ui.toggleLoading(false);
-            },
-            
-            async getAcordoById(acordoId) {
-                return this.state.acordos.find(a => a.id === acordoId);
+                },
+                notificationContainer: document.getElementById('notification-container'),
             },
 
             utils: {
@@ -364,275 +285,608 @@
                 parseCurrency: (value) => Number(String(value).replace(/[^0-9,-]+/g, "").replace(",", ".")),
             },
 
-            services: {
-                firebase: {
-                    db: null,
-                    auth: null,
-                    appId: null,
+            init() {
+                FirebaseService.connect(this.onAuthSuccess.bind(this));
+                EventListeners.init(this);
+            },
 
-                    init(config, appId) {
-                        if (AppController.state.isFirebaseInitialized) return;
-                        try {
-                            const firebaseApp = initializeApp(config);
-                            this.auth = getAuth(firebaseApp);
-                            this.db = getFirestore(firebaseApp);
-                            this.appId = appId;
-                            AppController.state.isFirebaseInitialized = true;
-                            onAuthStateChanged(this.auth, AppController.handleAuthStateChange.bind(AppController));
-                        } catch (error) {
-                            console.error("Firebase Initialization Error:", error);
-                            AppController.ui.showNotification("Erro crítico na inicialização.", "error");
-                        }
-                    },
+            onAuthSuccess(user) {
+                this.state.userId = user.uid;
+                this.state.isAuthReady = true;
+                this.elements.authStatus.innerHTML = `<p class="text-green-600">Conectado como: <span class="font-mono text-xs">${user.uid}</span></p>`;
+                FirebaseService.listenToAcordos(this.onAcordosUpdate.bind(this));
+            },
+
+            onAcordosUpdate(acordos) {
+                this.state.acordos = acordos;
+                UIModule.renderAcordosList(acordos);
+                UIModule.updateDashboard();
+                UIModule.toggleLoading(false);
+            },
+            
+            async getAcordoById(acordoId) {
+                return this.state.acordos.find(a => a.id === acordoId);
+            }
+        };
+
+        const FirebaseService = {
+            db: null,
+            appId: null,
+            connect(onAuthSuccessCallback) {
+                try {
+                    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "YOUR_API_KEY", authDomain: "YOUR_AUTH_DOMAIN", projectId: "YOUR_PROJECT_ID" };
+                    this.appId = typeof __app_id !== 'undefined' ? __app_id : 'gestao-acordos-default';
                     
-                    async register(email, password) {
-                        try {
-                            await createUserWithEmailAndPassword(this.auth, email, password);
-                            return { success: true };
-                        } catch (error) {
-                            return { success: false, message: this.getAuthErrorMessage(error) };
-                        }
-                    },
+                    const firebaseApp = initializeApp(firebaseConfig);
+                    const auth = getAuth(firebaseApp);
+                    this.db = getFirestore(firebaseApp);
 
-                    async login(email, password) {
-                        try {
-                            await signInWithEmailAndPassword(this.auth, email, password);
-                            return { success: true };
-                        } catch (error) {
-                            return { success: false, message: this.getAuthErrorMessage(error) };
+                    onAuthStateChanged(auth, user => {
+                        if (user) {
+                            onAuthSuccessCallback(user);
+                        } else {
+                            signInAnonymously(auth).catch(err => {
+                                console.error("Authentication Error:", err);
+                                UIModule.showNotification("Falha na conexão com o servidor.", "error");
+                            });
                         }
-                    },
-
-                    async logout() {
-                        try {
-                            await signOut(this.auth);
-                        } catch (error) {
-                            console.error("Logout Error:", error);
-                            AppController.ui.showNotification("Erro ao sair da conta.", "error");
-                        }
-                    },
-
-                    getAuthErrorMessage(error) {
-                        switch (error.code) {
-                            case 'auth/email-already-in-use': return 'Este e-mail já está em uso.';
-                            case 'auth/invalid-email': return 'Formato de e-mail inválido.';
-                            case 'auth/weak-password': return 'A senha deve ter pelo menos 6 caracteres.';
-                            case 'auth/user-not-found':
-                            case 'auth/wrong-password': 
-                            case 'auth/invalid-credential': return 'E-mail ou senha incorretos.';
-                            default: return 'Ocorreu um erro. Tente novamente.';
-                        }
-                    },
-                    
-                    listenToAcordos(onUpdateCallback) {
-                        if (!AppController.state.userId) return;
-                        const acordosQuery = query(collection(this.db, `artifacts/${this.appId}/users/${AppController.state.userId}/acordos`));
-                        onSnapshot(acordosQuery, async (snapshot) => {
-                            AppController.ui.toggleLoading(true);
-                            try {
-                                const acordoPromises = snapshot.docs.map(async (doc) => {
-                                    const acordo = { id: doc.id, ...doc.data() };
-                                    const pagamentosQuery = query(collection(this.db, `artifacts/${this.appId}/users/${AppController.state.userId}/pagamentos`), where("acordoId", "==", acordo.id));
-                                    const repassesQuery = query(collection(this.db, `artifacts/${this.appId}/users/${AppController.state.userId}/repasses`), where("acordoId", "==", acordo.id));
-                                    const [pagamentosSnap, repassesSnap] = await Promise.all([getDocs(pagamentosQuery), getDocs(repassesQuery)]);
-                                    acordo.pagamentos = pagamentosSnap.docs.map(d => ({id: d.id, ...d.data()}));
-                                    acordo.repasses = repassesSnap.docs.map(d => ({id: d.id, ...d.data()}));
-                                    return acordo;
-                                });
-                                const acordos = await Promise.all(acordoPromises);
-                                onUpdateCallback(acordos);
-                            } catch (error) {
-                                console.error("Error processing acordos snapshot:", error);
-                                AppController.ui.showNotification("Erro ao processar os dados dos acordos.", "error");
-                                AppController.ui.toggleLoading(false);
-                            }
-                        }, (error) => {
-                            console.error("Error listening to acordos:", error);
-                            AppController.ui.showNotification("Erro ao carregar acordos.", "error");
-                            AppController.ui.toggleLoading(false);
-                        });
-                    },
-                    
-                    async saveData(formType, data, parcelasData = []) {
-                        if (!AppController.state.isAuthReady) {
-                            AppController.ui.showNotification("Não autenticado. Recarregue a página.", "error");
-                            return false;
-                        }
-                        const batch = writeBatch(this.db);
-                        try {
-                            if (formType === 'acordo') {
-                                const acordoRef = doc(collection(this.db, `artifacts/${this.appId}/users/${AppController.state.userId}/acordos`));
-                                batch.set(acordoRef, data);
-                                parcelasData.forEach((parcela) => {
-                                    const parcelaRef = doc(collection(this.db, `artifacts/${this.appId}/users/${AppController.state.userId}/acordos/${acordoRef.id}/parcelas`));
-                                    batch.set(parcelaRef, parcela);
-                                });
-                            } else if (formType === 'pagamento') {
-                                const novoPagamentoRef = doc(collection(this.db, `artifacts/${this.appId}/users/${AppController.state.userId}/pagamentos`));
-                                batch.set(novoPagamentoRef, data);
-                                const parcelasQuery = query(collection(this.db, `artifacts/${this.appId}/users/${AppController.state.userId}/acordos/${data.acordoId}/parcelas`), where("status", "==", "Pendente"));
-                                const parcelasSnap = await getDocs(parcelasQuery);
-                                if (!parcelasSnap.empty) {
-                                    const parcelaMaisAntiga = parcelasSnap.docs.sort((a, b) => a.data().num - b.data().num)[0];
-                                    const parcelaRef = doc(this.db, `artifacts/${this.appId}/users/${AppController.state.userId}/acordos/${data.acordoId}/parcelas`, parcelaMaisAntiga.id);
-                                    batch.update(parcelaRef, { status: 'Pago' });
-                                }
-                            } else if (formType === 'repasse') {
-                                const novoRepasseRef = doc(collection(this.db, `artifacts/${this.appId}/users/${AppController.state.userId}/repasses`));
-                                batch.set(novoRepasseRef, data);
-                            }
-                            await batch.commit();
-                            return true;
-                        } catch (error) {
-                            console.error(`Error saving ${formType}:`, error);
-                            AppController.ui.showNotification(`Erro ao salvar ${formType}.`, "error");
-                            return false;
-                        }
-                    }
+                    });
+                } catch (error) {
+                    console.error("Firebase Initialization Error:", error);
+                    UIModule.showNotification("Erro crítico na inicialização.", "error");
+                    UIModule.toggleLoading(false);
                 }
             },
 
-            ui: {
-                showAuthView() {
-                    AppController.elements.authContainer.classList.remove('hidden');
-                    AppController.elements.appContainer.classList.add('hidden');
-                    this.toggleLoading(false);
-                },
+            listenToAcordos(onUpdateCallback) {
+                if (!AppController.state.userId) return;
+                const acordosQuery = query(collection(this.db, `artifacts/${this.appId}/users/${AppController.state.userId}/acordos`));
                 
-                showAppView() {
-                    AppController.elements.authContainer.classList.add('hidden');
-                    AppController.elements.appContainer.classList.remove('hidden');
-                },
-                
-                toggleLoading(isLoading, button = null) {
-                    if (button) {
-                        button.disabled = isLoading;
-                        const text = button.querySelector('.btn-text');
-                        const spinner = button.querySelector('.btn-spinner');
-                        if(text) text.classList.toggle('hidden', isLoading);
-                        if(spinner) spinner.classList.toggle('hidden', !isLoading);
-                    } else {
-                        AppController.elements.loadingScreen.classList.toggle('hidden', !isLoading);
-                        AppController.elements.loadingScreen.classList.toggle('flex', isLoading);
-                    }
-                },
-                showNotification(message, type = 'info') {
-                    const toast = document.createElement('div');
-                    toast.className = `toast ${type}`;
-                    toast.textContent = message;
-                    AppController.elements.notificationContainer.appendChild(toast);
-                    setTimeout(() => toast.classList.add('show'), 10);
-                    setTimeout(() => {
-                        toast.classList.remove('show');
-                        toast.addEventListener('transitionend', () => toast.remove());
-                    }, 4000);
-                },
-                openModal(modalId, setupFn) {
-                    const modal = document.getElementById(modalId);
-                    if (modal) {
-                        if (setupFn) setupFn();
-                        modal.classList.remove('hidden');
-                        modal.classList.add('flex');
-                    }
-                },
-                closeModal(modalId) {
-                    const modal = document.getElementById(modalId);
-                    if (modal) {
-                        modal.classList.add('hidden');
-                        modal.classList.remove('flex');
-                    }
-                },
-                renderAcordosList() {
-                    const { acordos, searchTerm } = AppController.state;
-                    const { acordosList } = AppController.elements;
-                    const { formatCurrency } = AppController.utils;
-                    
-                    const termoBusca = searchTerm.toLowerCase();
-                    const acordosFiltrados = acordos.filter(acordo => 
-                        (acordo.clienteNome || '').toLowerCase().includes(termoBusca) ||
-                        (acordo.processoCaso || '').toLowerCase().includes(termoBusca)
-                    );
-
-                    if (acordosFiltrados.length === 0) {
-                        acordosList.innerHTML = `<div class="p-8 text-center text-gray-500">${acordos.length > 0 ? 'Nenhum acordo encontrado para a sua busca.' : 'Nenhum acordo cadastrado.'}</div>`;
-                        return;
-                    }
-
-                    acordosList.innerHTML = acordosFiltrados.map(acordo => {
-                        const totalRecebido = acordo.pagamentos.reduce((sum, p) => sum + p.valor, 0);
-                        const honorariosPagos = acordo.pagamentos.reduce((sum, p) => sum + p.valorParaHonorarios, 0);
-                        const valorParaClienteTotal = acordo.pagamentos.reduce((sum, p) => sum + p.valorParaCliente, 0);
-                        const totalRepassado = acordo.repasses.reduce((sum, r) => sum + r.valor, 0);
-                        const pendenteRepasse = valorParaClienteTotal - totalRepassado;
-                        const progressoTotal = acordo.valorTotal > 0 ? (totalRecebido / acordo.valorTotal) * 100 : 0;
-                        const progressoHonorarios = acordo.valorHonorarios > 0 ? (honorariosPagos / acordo.valorHonorarios) * 100 : 0;
-                        return `
-                            <div class="border-t border-gray-200 p-4 hover:bg-gray-50 transition">
-                                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
-                                    <div class="md:col-span-2"><p class="font-bold text-lg text-blue-700">${acordo.clienteNome}</p><p class="text-sm text-gray-500">Proc: ${acordo.processoCaso}</p></div>
-                                    <div class="md:col-span-2">
-                                        <div class="mb-2"><div class="flex justify-between text-xs mb-1"><span>Progresso Total (${formatCurrency(totalRecebido)} de ${formatCurrency(acordo.valorTotal)})</span><span>${progressoTotal.toFixed(1)}%</span></div><div class="w-full bg-gray-200 rounded-full h-2.5"><div class="bg-blue-600 h-2.5 rounded-full" style="width: ${progressoTotal}%"></div></div></div>
-                                        <div><div class="flex justify-between text-xs mb-1"><span>Honorários Quitado (${formatCurrency(honorariosPagos)} de ${formatCurrency(acordo.valorHonorarios)})</span><span>${progressoHonorarios.toFixed(1)}%</span></div><div class="w-full bg-gray-200 rounded-full h-2.5"><div class="bg-green-600 h-2.5 rounded-full" style="width: ${progressoHonorarios}%"></div></div></div>
-                                    </div>
-                                    <div class="text-center md:text-right bg-blue-50 p-3 rounded-lg"><p class="text-sm font-medium text-blue-800">Pendente Repasse</p><p class="font-bold text-xl text-blue-800">${formatCurrency(pendenteRepasse)}</p></div>
-                                </div>
-                                <div class="mt-4 flex flex-wrap gap-2">
-                                    <button class="btn-registrar-pagamento bg-green-500 text-white px-3 py-1 text-sm rounded-md hover:bg-green-600" data-id="${acordo.id}">+ Registar Pagamento</button>
-                                    <button class="btn-registrar-repasse bg-purple-500 text-white px-3 py-1 text-sm rounded-md hover:bg-purple-600" data-id="${acordo.id}" data-cliente="${acordo.clienteNome}" data-pendente="${pendenteRepasse}">+ Registar Repasse</button>
-                                    <button class="btn-ver-detalhes bg-gray-200 text-gray-700 px-3 py-1 text-sm rounded-md hover:bg-gray-300" data-id="${acordo.id}">Ver Detalhes</button>
-                                </div>
-                                <div id="detalhes-${acordo.id}" class="hidden mt-4 p-4 bg-gray-50 rounded-lg"></div>
-                            </div>`;
-                    }).join('');
-                },
-                async updateDashboard() { /* ... */ },
-                renderChart(receitaPorMes) { /* ... */ },
-                async renderAcordoDetails(acordoId) { /* ... */ },
+                onSnapshot(acordosQuery, async (snapshot) => {
+                    UIModule.toggleLoading(true);
+                    const acordoPromises = snapshot.docs.map(async (doc) => {
+                        const acordo = { id: doc.id, ...doc.data() };
+                        const pagamentosQuery = query(collection(this.db, `artifacts/${this.appId}/users/${AppController.state.userId}/pagamentos`), where("acordoId", "==", acordo.id));
+                        const repassesQuery = query(collection(this.db, `artifacts/${this.appId}/users/${AppController.state.userId}/repasses`), where("acordoId", "==", acordo.id));
+                        const [pagamentosSnap, repassesSnap] = await Promise.all([getDocs(pagamentosQuery), getDocs(repassesQuery)]);
+                        acordo.pagamentos = pagamentosSnap.docs.map(d => ({id: d.id, ...d.data()}));
+                        acordo.repasses = repassesSnap.docs.map(d => ({id: d.id, ...d.data()}));
+                        return acordo;
+                    });
+                    const acordos = await Promise.all(acordoPromises);
+                    onUpdateCallback(acordos);
+                }, (error) => {
+                    console.error("Error listening to acordos:", error);
+                    UIModule.showNotification("Erro ao carregar acordos.", "error");
+                    UIModule.toggleLoading(false);
+                });
+            },
+            
+            async getAcordoDetails(acordoId) {
+                const { state } = AppController;
+                if (state.acordoDetailsCache.has(acordoId)) {
+                    return state.acordoDetailsCache.get(acordoId);
+                }
+                try {
+                    const parcelasQuery = query(collection(this.db, `artifacts/${this.appId}/users/${state.userId}/acordos/${acordoId}/parcelas`));
+                    const parcelasSnap = await getDocs(parcelasQuery);
+                    const parcelas = parcelasSnap.docs.map(d => ({id: d.id, ...d.data()})).sort((a, b) => a.num - b.num);
+                    state.acordoDetailsCache.set(acordoId, { parcelas });
+                    return { parcelas };
+                } catch (error) {
+                    console.error(`Error fetching details for acordo ${acordoId}:`, error);
+                    UIModule.showNotification("Erro ao buscar detalhes do acordo.", "error");
+                    return null;
+                }
             },
 
-            listeners: {
-                init() {
-                    AppController.elements.forms.login.addEventListener('submit', this.handleLogin);
-                    AppController.elements.forms.register.addEventListener('submit', this.handleRegister);
-                    document.getElementById('btn-logout').addEventListener('click', () => AppController.services.firebase.logout());
-                    document.getElementById('show-register-view').addEventListener('click', e => {
-                        e.preventDefault();
-                        AppController.elements.loginView.classList.add('hidden');
-                        AppController.elements.registerView.classList.remove('hidden');
-                    });
-                    document.getElementById('show-login-view').addEventListener('click', e => {
-                        e.preventDefault();
-                        AppController.elements.registerView.classList.add('hidden');
-                        AppController.elements.loginView.classList.remove('hidden');
-                    });
-                    // ... (outros listeners)
-                },
-
-                async handleLogin(e) {
-                    e.preventDefault();
-                    const email = e.target.querySelector('#login-email').value;
-                    const password = e.target.querySelector('#login-password').value;
-                    const result = await AppController.services.firebase.login(email, password);
-                    if (!result.success) {
-                        AppController.ui.showNotification(result.message, 'error');
+            async saveData(formType, data, parcelasData = []) {
+                if (!AppController.state.isAuthReady) {
+                    UIModule.showNotification("Não autenticado. Recarregue a página.", "error");
+                    return false;
+                }
+                const batch = writeBatch(this.db);
+                try {
+                    if (formType === 'acordo') {
+                        const acordoRef = doc(collection(this.db, `artifacts/${this.appId}/users/${AppController.state.userId}/acordos`));
+                        batch.set(acordoRef, data);
+                        parcelasData.forEach((parcela) => {
+                            const parcelaRef = doc(collection(this.db, `artifacts/${this.appId}/users/${AppController.state.userId}/acordos/${acordoRef.id}/parcelas`));
+                            batch.set(parcelaRef, parcela);
+                        });
+                    } else if (formType === 'pagamento') {
+                        const novoPagamentoRef = doc(collection(this.db, `artifacts/${this.appId}/users/${AppController.state.userId}/pagamentos`));
+                        batch.set(novoPagamentoRef, data);
+                        const parcelasQuery = query(collection(this.db, `artifacts/${this.appId}/users/${AppController.state.userId}/acordos/${data.acordoId}/parcelas`), where("status", "==", "Pendente"));
+                        const parcelasSnap = await getDocs(parcelasQuery);
+                        if (!parcelasSnap.empty) {
+                            const parcelaMaisAntiga = parcelasSnap.docs.sort((a, b) => a.data().num - b.data().num)[0];
+                            const parcelaRef = doc(this.db, `artifacts/${this.appId}/users/${AppController.state.userId}/acordos/${data.acordoId}/parcelas`, parcelaMaisAntiga.id);
+                            batch.update(parcelaRef, { status: 'Pago' });
+                        }
+                    } else if (formType === 'repasse') {
+                        const novoRepasseRef = doc(collection(this.db, `artifacts/${this.appId}/users/${AppController.state.userId}/repasses`));
+                        batch.set(novoRepasseRef, data);
                     }
-                },
+                    await batch.commit();
+                    return true;
+                } catch (error) {
+                    console.error(`Error saving ${formType}:`, error);
+                    UIModule.showNotification(`Erro ao salvar ${formType}.`, "error");
+                    return false;
+                }
+            }
+        };
 
-                async handleRegister(e) {
-                    e.preventDefault();
-                    const email = e.target.querySelector('#register-email').value;
-                    const password = e.target.querySelector('#register-password').value;
-                    const result = await AppController.services.firebase.register(email, password);
-                    if (result.success) {
-                        AppController.ui.showNotification('Conta criada com sucesso! A entrar...', 'success');
+        const UIModule = {
+            toggleLoading(isLoading, button = null) {
+                if (button) {
+                    button.disabled = isLoading;
+                    const text = button.querySelector('.btn-text');
+                    const spinner = button.querySelector('.btn-spinner');
+                    if(text) text.classList.toggle('hidden', isLoading);
+                    if(spinner) spinner.classList.toggle('hidden', !isLoading);
+                } else {
+                    AppController.elements.loadingScreen.classList.toggle('hidden', !isLoading);
+                    AppController.elements.loadingScreen.classList.toggle('flex', isLoading);
+                }
+            },
+
+            showNotification(message, type = 'info') {
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.textContent = message;
+                AppController.elements.notificationContainer.appendChild(toast);
+                setTimeout(() => toast.classList.add('show'), 10);
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    toast.addEventListener('transitionend', () => toast.remove());
+                }, 4000);
+            },
+
+            openModal(modalId, setupFn) {
+                const modal = AppController.elements.modals[modalId];
+                if (modal) {
+                    if (setupFn) setupFn();
+                    modal.classList.remove('hidden');
+                    modal.classList.add('flex');
+                }
+            },
+
+            closeModal(modalId) {
+                const modal = AppController.elements.modals[modalId];
+                if (modal) {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                }
+            },
+
+            renderAcordosList(acordos) {
+                const { acordosList } = AppController.elements;
+                const { formatCurrency } = AppController.utils;
+                const query = (AppController.state.searchQuery || '').toLowerCase();
+                const filtered = acordos.filter(a => (a.clienteNome || '').toLowerCase().includes(query) || (a.processoCaso || '').toLowerCase().includes(query));
+                if (filtered.length === 0) {
+                    acordosList.innerHTML = '<div class="p-8 text-center text-gray-500">Nenhum acordo cadastrado.</div>';
+                    return;
+                }
+                acordosList.innerHTML = filtered.map(acordo => {
+                    const totalRecebido = acordo.pagamentos.reduce((sum, p) => sum + p.valor, 0);
+                    const honorariosPagos = acordo.pagamentos.reduce((sum, p) => sum + p.valorParaHonorarios, 0);
+                    const valorParaClienteTotal = acordo.pagamentos.reduce((sum, p) => sum + p.valorParaCliente, 0);
+                    const totalRepassado = acordo.repasses.reduce((sum, r) => sum + r.valor, 0);
+                    const pendenteRepasse = valorParaClienteTotal - totalRepassado;
+                    const progressoTotal = acordo.valorTotal > 0 ? (totalRecebido / acordo.valorTotal) * 100 : 0;
+                    const progressoHonorarios = acordo.valorHonorarios > 0 ? (honorariosPagos / acordo.valorHonorarios) * 100 : 0;
+                    return `
+                        <div class="border-t border-gray-200 p-4 hover:bg-gray-50 transition">
+                            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
+                                <div class="md:col-span-2"><p class="font-bold text-lg text-blue-700">${acordo.clienteNome}</p><p class="text-sm text-gray-500">Proc: ${acordo.processoCaso}</p></div>
+                                <div class="md:col-span-2">
+                                    <div class="mb-2"><div class="flex justify-between text-xs mb-1"><span>Progresso Total (${formatCurrency(totalRecebido)} de ${formatCurrency(acordo.valorTotal)})</span><span>${progressoTotal.toFixed(1)}%</span></div><div class="w-full bg-gray-200 rounded-full h-2.5"><div class="bg-blue-600 h-2.5 rounded-full" style="width: ${progressoTotal}%"></div></div></div>
+                                    <div><div class="flex justify-between text-xs mb-1"><span>Honorários Quitado (${formatCurrency(honorariosPagos)} de ${formatCurrency(acordo.valorHonorarios)})</span><span>${progressoHonorarios.toFixed(1)}%</span></div><div class="w-full bg-gray-200 rounded-full h-2.5"><div class="bg-green-600 h-2.5 rounded-full" style="width: ${progressoHonorarios}%"></div></div></div>
+                                </div>
+                                <div class="text-center md:text-right bg-blue-50 p-3 rounded-lg"><p class="text-sm font-medium text-blue-800">Pendente Repasse</p><p class="font-bold text-xl text-blue-800">${formatCurrency(pendenteRepasse)}</p></div>
+                            </div>
+                            <div class="mt-4 flex flex-wrap gap-2">
+                                <button class="btn-registrar-pagamento bg-green-500 text-white px-3 py-1 text-sm rounded-md hover:bg-green-600" data-id="${acordo.id}">+ Registrar Pagamento</button>
+                                <button class="btn-registrar-repasse bg-purple-500 text-white px-3 py-1 text-sm rounded-md hover:bg-purple-600" data-id="${acordo.id}" data-cliente="${acordo.clienteNome}" data-pendente="${pendenteRepasse}">+ Registrar Repasse</button>
+                                <button class="btn-ver-detalhes bg-gray-200 text-gray-700 px-3 py-1 text-sm rounded-md hover:bg-gray-300" data-id="${acordo.id}">Ver Detalhes</button>
+                            </div>
+                            <div id="detalhes-${acordo.id}" class="hidden mt-4 p-4 bg-gray-50 rounded-lg"></div>
+                        </div>`;
+                }).join('');
+            },
+
+            async updateDashboard() {
+                const { acordos } = AppController.state;
+                const { dashboard } = AppController.elements;
+                const { formatCurrency, formatDate } = AppController.utils;
+                
+                const hoje = new Date(); hoje.setHours(0,0,0,0);
+                const mesAtual = hoje.getMonth();
+                const anoAtual = hoje.getFullYear();
+                const data30dias = new Date(); data30dias.setDate(hoje.getDate() + 30);
+
+                let receitaMes = 0;
+                let pendenteRepasseTotal = 0;
+                const receitaPorMes = {};
+
+                acordos.forEach(acordo => {
+                    const valorParaClienteTotal = acordo.pagamentos.reduce((sum, p) => sum + p.valorParaCliente, 0);
+                    const totalRepassado = acordo.repasses.reduce((sum, r) => sum + r.valor, 0);
+                    pendenteRepasseTotal += (valorParaClienteTotal - totalRepassado);
+                    acordo.pagamentos.forEach(p => {
+                        const dataPag = p.data.toDate();
+                        if (dataPag.getMonth() === mesAtual && dataPag.getFullYear() === anoAtual) receitaMes += p.valor;
+                        const mesAno = `${dataPag.getFullYear()}-${String(dataPag.getMonth() + 1).padStart(2, '0')}`;
+                        receitaPorMes[mesAno] = (receitaPorMes[mesAno] || 0) + p.valor;
+                    });
+                });
+
+                dashboard.receitaMes.textContent = formatCurrency(receitaMes);
+                dashboard.pendenteRepasse.textContent = formatCurrency(pendenteRepasseTotal);
+
+                let parcelasAtraso = 0;
+                let aReceber30d = 0;
+                let proximosVencimentos = [];
+                for (const acordo of acordos) {
+                    const details = await FirebaseService.getAcordoDetails(acordo.id);
+                    if (details?.parcelas) {
+                        details.parcelas.forEach(p => {
+                            if (p.status === 'Pendente') {
+                                const vencimento = p.vencimento.toDate();
+                                if (vencimento < hoje) parcelasAtraso++;
+                                if (vencimento >= hoje && vencimento <= data30dias) {
+                                    aReceber30d += p.valor;
+                                    proximosVencimentos.push({ ...p, clienteNome: acordo.clienteNome });
+                                }
+                            }
+                        });
+                    }
+                }
+
+                dashboard.parcelasAtraso.textContent = parcelasAtraso;
+                dashboard.aReceber30d.textContent = formatCurrency(aReceber30d);
+                
+                if (proximosVencimentos.length > 0) {
+                    proximosVencimentos.sort((a,b) => a.vencimento.toDate() - b.vencimento.toDate());
+                    dashboard.proximosVencimentos.innerHTML = proximosVencimentos.slice(0, 5).map(p => `
+                        <li class="flex justify-between items-center text-sm"><span>${p.clienteNome} - Parcela ${p.num}</span><span class="font-semibold">${formatDate(p.vencimento)}</span></li>
+                    `).join('');
+                } else {
+                    dashboard.proximosVencimentos.innerHTML = '<li class="text-gray-500">Nenhum vencimento próximo.</li>';
+                }
+                this.renderChart(receitaPorMes);
+            },
+
+            renderChart(receitaPorMes) {
+                const { chartCanvas } = AppController.elements.dashboard;
+                if (AppController.state.chartInstance) AppController.state.chartInstance.destroy();
+                const labels = [];
+                const data = [];
+                for (let i = 5; i >= 0; i--) {
+                    const d = new Date();
+                    d.setMonth(d.getMonth() - i);
+                    labels.push(d.toLocaleString('pt-BR', { month: 'short', year: '2-digit' }));
+                    const mesAnoKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                    data.push(receitaPorMes[mesAnoKey] || 0);
+                }
+                AppController.state.chartInstance = new Chart(chartCanvas.getContext('2d'), {
+                    type: 'bar',
+                    data: { labels, datasets: [{ label: 'Receita', data, backgroundColor: 'rgba(59, 130, 246, 0.5)', borderColor: 'rgba(59, 130, 246, 1)', borderWidth: 1, borderRadius: 5 }] },
+                    options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { callback: (value) => AppController.utils.formatCurrency(value) } } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (context) => `Receita: ${AppController.utils.formatCurrency(context.raw)}` } } } }
+                });
+            },
+            
+            async renderAcordoDetails(acordoId) {
+                const detalhesEl = document.getElementById(`detalhes-${acordoId}`);
+                if (!detalhesEl.classList.contains('hidden')) {
+                    detalhesEl.classList.add('hidden');
+                    return;
+                }
+                detalhesEl.innerHTML = '<div class="loader mx-auto"></div>';
+                detalhesEl.classList.remove('hidden');
+
+                const details = await FirebaseService.getAcordoDetails(acordoId);
+                const acordo = await AppController.getAcordoById(acordoId);
+                if (!details || !acordo) {
+                    detalhesEl.innerHTML = '<p class="text-red-500">Não foi possível carregar os detalhes.</p>';
+                    return;
+                }
+                
+                const { parcelas } = details;
+                const { pagamentos, repasses } = acordo;
+                const { formatDate, formatCurrency } = AppController.utils;
+
+                const getStatusInfo = (status, vencimento) => {
+                    if (status === 'Pago') return { text: 'Pago', color: 'bg-green-100 text-green-800' };
+                    const hoje = new Date(); hoje.setHours(0,0,0,0);
+                    if (vencimento.toDate() < hoje) return { text: 'Atrasado', color: 'bg-red-100 text-red-800' };
+                    return { text: 'Pendente', color: 'bg-yellow-100 text-yellow-800' };
+                };
+
+                const parcelasHtml = parcelas.length > 0 ? `
+                    <h4 class="font-semibold mb-2">Parcelas</h4><div class="overflow-x-auto"><table class="min-w-full text-sm">
+                        <thead class="bg-gray-200"><tr><th class="p-2 text-left">#</th><th class="p-2 text-left">Vencimento</th><th class="p-2 text-left">Valor</th><th class="p-2 text-left">Status</th></tr></thead>
+                        <tbody>${parcelas.map(p => {
+                            const statusInfo = getStatusInfo(p.status, p.vencimento);
+                            return `<tr class="border-b"><td class="p-2">${p.num}</td><td class="p-2">${formatDate(p.vencimento)}</td><td class="p-2">${formatCurrency(p.valor)}</td><td class="p-2"><span class="px-2 py-1 text-xs font-medium rounded-full ${statusInfo.color}">${statusInfo.text}</span></td></tr>`;
+                        }).join('')}</tbody>
+                    </table></div>` : '<p>Nenhuma parcela encontrada.</p>';
+                const pagamentosHtml = pagamentos.length > 0 ? `
+                    <h4 class="font-semibold mt-4 mb-2">Pagamentos Recebidos</h4><div class="overflow-x-auto"><table class="min-w-full text-sm">
+                        <thead class="bg-gray-200"><tr><th class="p-2 text-left">Data</th><th class="p-2 text-left">Valor Total</th><th class="p-2 text-left">P/ Honorários</th><th class="p-2 text-left">P/ Cliente</th></tr></thead>
+                        <tbody>${pagamentos.sort((a,b) => a.data.toDate() - b.data.toDate()).map(p => `
+                            <tr class="border-b"><td class="p-2">${formatDate(p.data)}</td><td class="p-2 font-semibold">${formatCurrency(p.valor)}</td><td class="p-2 text-green-600">${formatCurrency(p.valorParaHonorarios)}</td><td class="p-2 text-blue-600">${formatCurrency(p.valorParaCliente)}</td></tr>
+                        `).join('')}</tbody>
+                    </table></div>` : '<p class="mt-4">Nenhum pagamento registrado.</p>';
+                const repassesHtml = repasses.length > 0 ? `
+                    <h4 class="font-semibold mt-4 mb-2">Repasses ao Cliente</h4><div class="overflow-x-auto"><table class="min-w-full text-sm">
+                        <thead class="bg-gray-200"><tr><th class="p-2 text-left">Data</th><th class="p-2 text-left">Valor</th><th class="p-2 text-left">Obs</th></tr></thead>
+                        <tbody>${repasses.sort((a,b) => a.data.toDate() - b.data.toDate()).map(r => `
+                            <tr class="border-b"><td class="p-2">${formatDate(r.data)}</td><td class="p-2">${formatCurrency(r.valor)}</td><td class="p-2">${r.obs || '-'}</td></tr>
+                        `).join('')}</tbody>
+                    </table></div>` : '<p class="mt-4">Nenhum repasse registrado.</p>';
+                detalhesEl.innerHTML = `${parcelasHtml}${pagamentosHtml}${repassesHtml}`;
+            }
+        };
+
+        const EventListeners = {
+            init(controller) {
+                this.controller = controller;
+                document.getElementById('btn-add-acordo').addEventListener('click', () => this.handleOpenAcordoModal());
+                AppController.elements.forms.acordo.addEventListener('submit', (e) => this.handleSaveAcordo(e));
+                AppController.elements.forms.pagamento.addEventListener('submit', (e) => this.handleSavePagamento(e));
+                AppController.elements.forms.repasse.addEventListener('submit', (e) => this.handleSaveRepasse(e));
+                document.getElementById('btn-cancel-acordo').addEventListener('click', () => UIModule.closeModal('acordo'));
+                document.getElementById('btn-cancel-pagamento').addEventListener('click', () => UIModule.closeModal('pagamento'));
+                document.getElementById('btn-cancel-repasse').addEventListener('click', () => UIModule.closeModal('repasse'));
+                const searchInput = document.getElementById('acordos-search');
+                if (searchInput) {
+                    searchInput.addEventListener('input', (e) => this.handleSearch(e));
+                }
+                AppController.elements.acordosList.addEventListener('click', (e) => {
+                    const button = e.target.closest('button');
+                    if (!button) return;
+                    const { id, cliente, pendente } = button.dataset;
+                    if (button.classList.contains('btn-registrar-pagamento')) this.handleOpenPagamentoModal(id);
+                    if (button.classList.contains('btn-registrar-repasse')) this.handleOpenRepasseModal(id, cliente, pendente);
+                    if (button.classList.contains('btn-ver-detalhes')) UIModule.renderAcordoDetails(id);
+                });
+                this.initAcordoFormListeners();
+                this.initPagamentoFormListeners();
+            },
+
+            handleSearch(e) {
+                AppController.state.searchQuery = e.target.value || '';
+                UIModule.renderAcordosList(AppController.state.acordos);
+            },
+
+            handleOpenAcordoModal() {
+                UIModule.openModal('acordo', () => {
+                    AppController.elements.forms.acordo.reset();
+                    document.getElementById('parcelas-editor-container').innerHTML = '';
+                    document.getElementById('parcelas-soma-feedback').innerHTML = '';
+                    document.getElementById('gerar-data-inicio').valueAsDate = new Date();
+                    this.updateHonorariosCalculado();
+                    document.getElementById('btn-save-acordo').disabled = false;
+                });
+            },
+
+            handleOpenPagamentoModal(acordoId) {
+                UIModule.openModal('pagamento', () => {
+                    AppController.elements.forms.pagamento.reset();
+                    document.getElementById('pagamento-distribuicao').classList.add('hidden');
+                    document.getElementById('pagamento-acordo-id').value = acordoId;
+                    document.getElementById('pagamento-data').valueAsDate = new Date();
+                });
+            },
+
+            handleOpenRepasseModal(acordoId, cliente, pendente) {
+                const pendenteValue = parseFloat(pendente);
+                UIModule.openModal('repasse', () => {
+                    const form = AppController.elements.forms.repasse;
+                    form.reset();
+                    form.querySelector('#repasse-acordo-id').value = acordoId;
+                    form.querySelector('#repasse-data').valueAsDate = new Date();
+                    form.querySelector('#repasse-info-cliente').textContent = `Cliente: ${cliente}. Pendente: ${AppController.utils.formatCurrency(pendenteValue)}`;
+                    const valorInput = form.querySelector('#repasse-valor');
+                    valorInput.value = pendenteValue > 0 ? pendenteValue.toFixed(2) : '';
+                    valorInput.max = pendenteValue > 0 ? pendenteValue.toFixed(2) : 0;
+                });
+            },
+
+            async handleSaveAcordo(e) {
+                e.preventDefault();
+                const form = e.target;
+                const button = form.querySelector('button[type="submit"]');
+                UIModule.toggleLoading(true, button);
+                const valorHonorariosFinal = AppController.utils.parseCurrency(form['valor-honorarios-calculado'].value);
+                const valorTotal = parseFloat(form['valor-total'].value);
+                if (valorTotal <= 0 || valorHonorariosFinal < 0 || valorHonorariosFinal > valorTotal) {
+                    UIModule.showNotification("Valores de acordo ou honorários inválidos.", "error");
+                    UIModule.toggleLoading(false, button); return;
+                }
+                const parcelasItens = form.querySelectorAll('.parcela-item');
+                if (parcelasItens.length === 0) {
+                    UIModule.showNotification("Gere as parcelas antes de salvar.", "error");
+                    UIModule.toggleLoading(false, button); return;
+                }
+                const acordoData = {
+                    clienteNome: form['cliente-nome'].value.trim(),
+                    processoCaso: form['processo-caso'].value.trim(),
+                    valorTotal, valorHonorarios: valorHonorariosFinal,
+                    tipoHonorarios: form['tipo-honorarios'].value,
+                    valorHonorariosDefinido: form['tipo-honorarios'].value === 'percentual' ? parseFloat(form['valor-honorarios-percentual'].value) : parseFloat(form['valor-honorarios-fixo'].value),
+                    createdAt: serverTimestamp(),
+                };
+                const parcelasData = Array.from(parcelasItens).map((item, index) => ({
+                    num: index + 1,
+                    vencimento: new Date(item.querySelector('.parcela-data').value + 'T00:00:00'),
+                    valor: parseFloat(item.querySelector('.parcela-valor').value),
+                    status: 'Pendente',
+                }));
+                const success = await FirebaseService.saveData('acordo', acordoData, parcelasData);
+                if (success) {
+                    UIModule.showNotification("Acordo salvo com sucesso!", "success");
+                    UIModule.closeModal('acordo');
+                }
+                UIModule.toggleLoading(false, button);
+            },
+
+            async handleSavePagamento(e) {
+                e.preventDefault();
+                const form = e.target;
+                const button = form.querySelector('button[type="submit"]');
+                UIModule.toggleLoading(true, button);
+                const valorRecebido = parseFloat(form['pagamento-valor'].value) || 0;
+                const valorParaHonorarios = parseFloat(form['pagamento-honorarios-destinados'].value) || 0;
+                if (valorRecebido <= 0 || valorParaHonorarios < 0 || valorParaHonorarios > valorRecebido) {
+                    UIModule.showNotification("Valores de pagamento inválidos.", "error");
+                    UIModule.toggleLoading(false, button); return;
+                }
+                const pagamentoData = {
+                    acordoId: form['pagamento-acordo-id'].value,
+                    valor: valorRecebido,
+                    data: new Date(form['pagamento-data'].value + 'T00:00:00'),
+                    formaPagamento: form['pagamento-forma'].value,
+                    obs: form['obs-pagamento'].value.trim(),
+                    valorParaHonorarios,
+                    valorParaCliente: valorRecebido - valorParaHonorarios,
+                    createdAt: serverTimestamp()
+                };
+                const success = await FirebaseService.saveData('pagamento', pagamentoData);
+                if (success) {
+                    UIModule.showNotification("Pagamento registrado com sucesso!", "success");
+                    UIModule.closeModal('pagamento');
+                }
+                UIModule.toggleLoading(false, button);
+            },
+
+            async handleSaveRepasse(e) {
+                e.preventDefault();
+                const form = e.target;
+                const button = form.querySelector('button[type="submit"]');
+                UIModule.toggleLoading(true, button);
+                const valorRepassado = parseFloat(form['repasse-valor'].value) || 0;
+                if (valorRepassado <= 0) {
+                    UIModule.showNotification("Valor do repasse deve ser positivo.", "error");
+                    UIModule.toggleLoading(false, button); return;
+                }
+                const repasseData = {
+                    acordoId: form['repasse-acordo-id'].value,
+                    valor: valorRepassado,
+                    data: new Date(form['repasse-data'].value + 'T00:00:00'),
+                    obs: form['obs-repasse'].value.trim(),
+                    status: 'Realizado',
+                    createdAt: serverTimestamp()
+                };
+                const success = await FirebaseService.saveData('repasse', repasseData);
+                if (success) {
+                    UIModule.showNotification("Repasse registrado com sucesso!", "success");
+                    UIModule.closeModal('repasse');
+                }
+                UIModule.toggleLoading(false, button);
+            },
+
+            initAcordoFormListeners() {
+                const form = AppController.elements.forms.acordo;
+                const honorariosRadios = form.querySelectorAll('input[name="tipo-honorarios"]');
+                const valorTotalInput = form.querySelector('#valor-total');
+                const honorariosPercentualInput = form.querySelector('#valor-honorarios-percentual');
+                const honorariosFixoInput = form.querySelector('#valor-honorarios-fixo');
+                honorariosRadios.forEach(radio => radio.addEventListener('change', () => this.updateHonorariosCalculado()));
+                [valorTotalInput, honorariosPercentualInput, honorariosFixoInput].forEach(input => input.addEventListener('input', () => this.updateHonorariosCalculado()));
+                form.querySelector('#btn-gerar-parcelas').addEventListener('click', () => this.handleGerarParcelas());
+                form.querySelector('#parcelas-editor-container').addEventListener('input', (e) => {
+                    if (e.target.classList.contains('parcela-valor')) this.updateSomaParcelas();
+                });
+            },
+
+            updateHonorariosCalculado() {
+                const form = AppController.elements.forms.acordo;
+                const tipo = form.querySelector('input[name="tipo-honorarios"]:checked').value;
+                const valorTotal = parseFloat(form['valor-total'].value) || 0;
+                let valorCalculado = 0;
+                form.querySelector('#container-honorarios-percentual').classList.toggle('hidden', tipo !== 'percentual');
+                form.querySelector('#container-honorarios-fixo').classList.toggle('hidden', tipo !== 'fixo');
+                if (tipo === 'percentual') {
+                    valorCalculado = valorTotal * (parseFloat(form['valor-honorarios-percentual'].value) / 100 || 0);
+                } else {
+                    valorCalculado = parseFloat(form['valor-honorarios-fixo'].value) || 0;
+                }
+                form['valor-honorarios-calculado'].value = AppController.utils.formatCurrency(valorCalculado);
+            },
+
+            handleGerarParcelas() {
+                const form = AppController.elements.forms.acordo;
+                const numParcelas = parseInt(form['gerar-num-parcelas'].value) || 1;
+                const valorTotal = parseFloat(form['valor-total'].value) || 0;
+                const dataInicioStr = form['gerar-data-inicio'].value;
+                if (valorTotal <= 0) { UIModule.showNotification("Insira um Valor Total do Acordo válido.", "error"); return; }
+                if (!dataInicioStr) { UIModule.showNotification("Selecione uma data de início para a primeira parcela.", "error"); return; }
+                const valorParcela = (valorTotal / numParcelas);
+                let html = '';
+                for (let i = 0; i < numParcelas; i++) {
+                    const dataVencimento = new Date(dataInicioStr + 'T00:00:00');
+                    dataVencimento.setMonth(dataVencimento.getMonth() + i);
+                    html += `<div class="flex items-center gap-2 parcela-item"><span class="font-mono text-sm text-gray-500 w-8 text-center">${i + 1}.</span><input type="date" value="${dataVencimento.toISOString().split('T')[0]}" class="parcela-data border-gray-300 rounded-md shadow-sm w-full"><input type="number" value="${valorParcela.toFixed(2)}" step="0.01" class="parcela-valor border-gray-300 rounded-md shadow-sm w-full text-right"></div>`;
+                }
+                form.querySelector('#parcelas-editor-container').innerHTML = html;
+                this.updateSomaParcelas();
+            },
+
+            updateSomaParcelas() {
+                const form = AppController.elements.forms.acordo;
+                const valorTotalAcordo = parseFloat(form['valor-total'].value) || 0;
+                const soma = Array.from(form.querySelectorAll('.parcela-valor')).reduce((acc, input) => acc + (parseFloat(input.value) || 0), 0);
+                const diferenca = soma - valorTotalAcordo;
+                const feedbackEl = form.querySelector('#parcelas-soma-feedback');
+                feedbackEl.textContent = `Soma das Parcelas: ${AppController.utils.formatCurrency(soma)}`;
+                if (Math.abs(diferenca) < 0.01) {
+                    feedbackEl.className = 'mt-4 p-3 rounded-lg font-semibold text-right bg-green-100 text-green-800';
+                    form.querySelector('#btn-save-acordo').disabled = false;
+                } else {
+                    feedbackEl.className = 'mt-4 p-3 rounded-lg font-semibold text-right bg-red-100 text-red-800';
+                    feedbackEl.textContent += ` (Diferença de ${AppController.utils.formatCurrency(diferenca)})`;
+                    form.querySelector('#btn-save-acordo').disabled = true;
+                }
+            },
+
+            initPagamentoFormListeners() {
+                const form = AppController.elements.forms.pagamento;
+                const valorRecebidoInput = form.querySelector('#pagamento-valor');
+                const honorariosDestinadosInput = form.querySelector('#pagamento-honorarios-destinados');
+                valorRecebidoInput.addEventListener('input', async () => {
+                    const valorRecebido = parseFloat(valorRecebidoInput.value) || 0;
+                    const acordoId = form.querySelector('#pagamento-acordo-id').value;
+                    const acordo = await AppController.getAcordoById(acordoId);
+                    const distribuicaoContainer = form.querySelector('#pagamento-distribuicao');
+                    if (valorRecebido > 0 && acordo) {
+                        const honorariosPagos = acordo.pagamentos.reduce((sum, p) => sum + p.valorParaHonorarios, 0);
+                        const honorariosDevidos = acordo.valorHonorarios - honorariosPagos;
+                        form.querySelector('#honorarios-devidos-info').textContent = `Restam ${AppController.utils.formatCurrency(honorariosDevidos)} de honorários.`;
+                        honorariosDestinadosInput.value = Math.max(0, Math.min(valorRecebido, honorariosDevidos)).toFixed(2);
+                        this.updatePagamentoDistribuicao();
+                        distribuicaoContainer.classList.remove('hidden');
                     } else {
-                        AppController.ui.showNotification(result.message, 'error');
+                        distribuicaoContainer.classList.add('hidden');
                     }
-                },
+                });
+                honorariosDestinadosInput.addEventListener('input', () => this.updatePagamentoDistribuicao());
+            },
+
+            updatePagamentoDistribuicao() {
+                const form = AppController.elements.forms.pagamento;
+                const valorRecebido = parseFloat(form['pagamento-valor'].value) || 0;
+                const valorHonorarios = parseFloat(form['pagamento-honorarios-destinados'].value) || 0;
+                form['pagamento-cliente-destinado'].value = AppController.utils.formatCurrency(valorRecebido - valorHonorarios);
             }
         };
 
         document.addEventListener('DOMContentLoaded', () => AppController.init());
+
     </script>
 </body>
 </html>
