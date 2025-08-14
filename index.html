@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Acordos Trabalhistas v4.2</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Ícones (Heroicons) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/heroicons/2.1.3/24/outline/heroicons.min.css">
+
+    <style>
+        :root {
+            --color-primary: #3b82f6;
+            --color-primary-hover: #2563eb;
+            --color-secondary: #6b7280;
+            --color-success: #16a34a;
+            --color-error: #dc2626;
+            --color-background: #f3f4f6;
+            --font-sans: 'Inter', sans-serif;
+        }
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--color-background);
+        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        .modal { transition: opacity 0.3s ease-in-out; }
+        .card-shadow { box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--color-primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        .btn-spinner {
+            border: 2px solid #fff;
+            border-top-color: transparent;
+            border-radius: 50%;
+            width: 1rem;
+            height: 1rem;
+            animation: spin 0.6s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        #notification-container {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .toast {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            color: white;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+        .toast.show { opacity: 1; transform: translateX(0); }
+        .toast.success { background-color: var(--color-success); }
+        .toast.error { background-color: var(--color-error); }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <!-- Container de Autenticação -->
+    <div id="auth-container" class="flex items-center justify-center min-h-screen">
+        <div class="w-full max-w-md">
+            <!-- Formulário de Login -->
+            <div id="login-view">
+                <div class="bg-white p-8 rounded-lg shadow-md">
+                    <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Login</h2>
+                    <form id="form-login">
+                        <div class="mb-4">
+                            <label for="login-email" class="block text-sm font-medium text-gray-700">Email</label>
+                            <input type="email" id="login-email" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div class="mb-6">
+                            <label for="login-password" class="block text-sm font-medium text-gray-700">Senha</label>
+                            <input type="password" id="login-password" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Entrar</button>
+                    </form>
+                    <p class="mt-4 text-center text-sm text-gray-600">
+                        Não tem uma conta? <a href="#" id="show-register-view" class="font-medium text-blue-600 hover:text-blue-500">Registe-se</a>
+                    </p>
+                </div>
+            </div>
+            <!-- Formulário de Registo -->
+            <div id="register-view" class="hidden">
+                <div class="bg-white p-8 rounded-lg shadow-md">
+                    <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Criar Conta</h2>
+                    <form id="form-register">
+                        <div class="mb-4">
+                            <label for="register-email" class="block text-sm font-medium text-gray-700">Email</label>
+                            <input type="email" id="register-email" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div class="mb-6">
+                            <label for="register-password" class="block text-sm font-medium text-gray-700">Senha (mínimo 6 caracteres)</label>
+                            <input type="password" id="register-password" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Criar Conta</button>
+                    </form>
+                    <p class="mt-4 text-center text-sm text-gray-600">
+                        Já tem uma conta? <a href="#" id="show-login-view" class="font-medium text-blue-600 hover:text-blue-500">Faça login</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Container Principal da Aplicação (inicialmente escondido) -->
+    <div id="app-container" class="p-4 md:p-8 max-w-7xl mx-auto hidden">
+        <header class="mb-8 flex justify-between items-start">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Gestão de Acordos Trabalhistas</h1>
+                <p class="text-gray-600 mt-1">Seu painel central para controle de recebimentos e repasses.</p>
+                <div id="auth-status" class="mt-2 text-sm text-gray-500"></div>
+            </div>
+            <button id="btn-logout" class="bg-red-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-600 transition duration-300 flex items-center justify-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" /></svg>
+                Sair
+            </button>
+        </header>
+        <div id="loading-screen" class="fixed inset-0 bg-white bg-opacity-75 flex flex-col items-center justify-center z-50">
+            <div class="loader"></div>
+            <p class="mt-4 text-lg font-semibold text-gray-700">A carregar dados...</p>
+        </div>
+        <section id="dashboard" class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4 text-gray-800">Dashboard</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white p-5 rounded-lg card-shadow"><h3 class="text-sm font-medium text-gray-500">Receita Total (Mês)</h3><p id="receita-mes" class="text-2xl font-semibold mt-1">R$ 0,00</p></div>
+                <div class="bg-white p-5 rounded-lg card-shadow"><h3 class="text-sm font-medium text-gray-500">Parcelas em Atraso</h3><p id="parcelas-atraso" class="text-2xl font-semibold mt-1">0</p></div>
+                <div class="bg-white p-5 rounded-lg card-shadow"><h3 class="text-sm font-medium text-gray-500">A Receber (30 dias)</h3><p id="a-receber-30d" class="text-2xl font-semibold mt-1">R$ 0,00</p></div>
+                <div class="bg-white p-5 rounded-lg card-shadow"><h3 class="text-sm font-medium text-gray-500">Total Pendente de Repasse</h3><p id="pendente-repasse" class="text-2xl font-semibold mt-1 text-blue-600">R$ 0,00</p></div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                <div class="bg-white p-5 rounded-lg card-shadow"><h3 class="text-lg font-semibold mb-2">Receita Mensal (Últimos 6 meses)</h3><canvas id="receitaMensalChart"></canvas></div>
+                <div class="bg-white p-5 rounded-lg card-shadow"><h3 class="text-lg font-semibold mb-2">Próximos 5 Vencimentos</h3><ul id="proximos-vencimentos" class="space-y-2"><li class="text-gray-500">Nenhum vencimento próximo.</li></ul></div>
+            </div>
+        </section>
+        <section id="acordos">
+            <div class="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-4">
+                <h2 class="text-2xl font-semibold text-gray-800">Acordos</h2>
+                <div class="flex-grow md:max-w-sm">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd" /></svg>
+                        </div>
+                        <input type="search" id="search-acordos" placeholder="Pesquisar por cliente ou processo..." class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    </div>
+                </div>
+                <button id="btn-add-acordo" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                    Adicionar Acordo
+                </button>
+            </div>
+            <div id="acordos-list" class="bg-white rounded-lg card-shadow overflow-hidden">
+                <div class="p-8 text-center text-gray-500">Nenhum acordo cadastrado.</div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Modals (Acordo, Pagamento, Repasse) -->
+    <div id="modal-acordo" class="modal fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-20">
+        <div class="bg-white rounded-lg p-8 w-full max-w-4xl max-h-screen overflow-y-auto">
+            <h2 class="text-2xl font-bold mb-6">Novo Acordo</h2>
+            <form id="form-acordo" novalidate>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div><label for="cliente-nome" class="block text-sm font-medium text-gray-700">Nome do Cliente</label><input type="text" id="cliente-nome" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></div>
+                    <div><label for="processo-caso" class="block text-sm font-medium text-gray-700">Nº do Processo/Caso</label><input type="text" id="processo-caso" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></div>
+                    <div><label for="valor-total" class="block text-sm font-medium text-gray-700">Valor Total do Acordo</label><input type="number" id="valor-total" step="0.01" min="0.01" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Honorários</label>
+                        <div class="flex gap-4">
+                            <label class="radio-label flex-1"><input type="radio" name="tipo-honorarios" value="percentual" class="sr-only" checked><div class="p-4 border-2 border-gray-300 rounded-lg cursor-pointer"><h3 class="font-semibold text-gray-800">Percentual (%)</h3><p class="text-sm text-gray-500">Calcular com base em uma porcentagem.</p></div></label>
+                            <label class="radio-label flex-1"><input type="radio" name="tipo-honorarios" value="fixo" class="sr-only"><div class="p-4 border-2 border-gray-300 rounded-lg cursor-pointer"><h3 class="font-semibold text-gray-800">Valor Fixo (R$)</h3><p class="text-sm text-gray-500">Inserir um valor monetário fixo.</p></div></label>
+                        </div>
+                    </div>
+                    <div id="container-honorarios-percentual"><label for="valor-honorarios-percentual" class="block text-sm font-medium text-gray-700">Percentual de Honorários (%)</label><input type="number" id="valor-honorarios-percentual" step="0.1" min="0" max="100" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" value="30"></div>
+                    <div id="container-honorarios-fixo" class="hidden"><label for="valor-honorarios-fixo" class="block text-sm font-medium text-gray-700">Valor Fixo dos Honorários (R$)</label><input type="number" id="valor-honorarios-fixo" step="0.01" min="0" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></div>
+                    <div><label for="valor-honorarios-calculado" class="block text-sm font-medium text-gray-700">Valor Total dos Honorários (Calculado)</label><input type="text" id="valor-honorarios-calculado" readonly class="mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-100"></div>
+                </div>
+                <div class="mt-8 pt-6 border-t">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Editor de Parcelas</h3>
+                    <div class="flex items-end gap-4 mb-4 p-4 bg-gray-50 rounded-lg">
+                        <div><label for="gerar-num-parcelas" class="block text-sm font-medium text-gray-700">Nº de Parcelas</label><input type="number" id="gerar-num-parcelas" min="1" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" value="1"></div>
+                        <div><label for="gerar-data-inicio" class="block text-sm font-medium text-gray-700">Data da 1ª Parcela</label><input type="date" id="gerar-data-inicio" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></div>
+                        <button type="button" id="btn-gerar-parcelas" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700">Gerar/Resetar Parcelas</button>
+                    </div>
+                    <div id="parcelas-editor-container" class="space-y-2"></div>
+                    <div id="parcelas-soma-feedback" class="mt-4 p-3 rounded-lg font-semibold text-right"></div>
+                </div>
+                <div class="flex justify-end mt-8 pt-6 border-t space-x-4">
+                    <button type="button" id="btn-cancel-acordo" class="bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300">Cancelar</button>
+                    <button type="submit" id="btn-save-acordo" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2">
+                        <span class="btn-text">Salvar Acordo</span>
+                        <div class="btn-spinner hidden"></div>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div id="modal-pagamento" class="modal fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-30">
+        <div class="bg-white rounded-lg p-8 w-full max-w-lg">
+            <h2 class="text-2xl font-bold mb-6">Registar Pagamento</h2>
+            <form id="form-pagamento" novalidate>
+                <input type="hidden" id="pagamento-acordo-id">
+                <div><label for="pagamento-valor" class="block text-sm font-medium text-gray-700">Valor Total Recebido</label><input type="number" id="pagamento-valor" step="0.01" min="0.01" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></div>
+                <div class="mt-4"><label for="pagamento-data" class="block text-sm font-medium text-gray-700">Data do Pagamento</label><input type="date" id="pagamento-data" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></div>
+                <div id="pagamento-distribuicao" class="mt-6 pt-4 border-t hidden">
+                    <h3 class="text-md font-semibold text-gray-800 mb-2">Distribuição do Valor</h3>
+                    <div class="space-y-3 p-4 bg-gray-50 rounded-lg">
+                        <div><label for="pagamento-honorarios-destinados" class="block text-sm font-medium text-green-700">Valor para Honorários</label><input type="number" id="pagamento-honorarios-destinados" step="0.01" min="0" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"><p id="honorarios-devidos-info" class="text-xs text-gray-500 mt-1"></p></div>
+                        <div><label for="pagamento-cliente-destinado" class="block text-sm font-medium text-blue-700">Valor para o Cliente</label><input type="text" id="pagamento-cliente-destinado" readonly class="mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-100"></div>
+                    </div>
+                </div>
+                <div class="mt-6"><label for="pagamento-forma" class="block text-sm font-medium text-gray-700">Forma de Pagamento</label><select id="pagamento-forma" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"><option>PIX</option><option>Boleto</option><option>Transferência</option><option>Outro</option></select></div>
+                <div class="mt-4"><label for="obs-pagamento" class="block text-sm font-medium text-gray-700">Observações</p><textarea id="obs-pagamento" rows="2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></textarea></div>
+                <div class="flex justify-end mt-6 space-x-4">
+                    <button type="button" id="btn-cancel-pagamento" class="bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300">Cancelar</button>
+                    <button type="submit" class="bg-green-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-700 flex items-center justify-center gap-2">
+                        <span class="btn-text">Registar</span>
+                        <div class="btn-spinner hidden"></div>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div id="modal-repasse" class="modal fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-30">
+        <div class="bg-white rounded-lg p-8 w-full max-w-lg">
+            <h2 class="text-2xl font-bold mb-2">Registar Repasse para Cliente</h2>
+            <p id="repasse-info-cliente" class="text-gray-600 mb-6"></p>
+            <form id="form-repasse" novalidate>
+                <input type="hidden" id="repasse-acordo-id">
+                <div><label for="repasse-valor" class="block text-sm font-medium text-gray-700">Valor Repassado</label><input type="number" id="repasse-valor" step="0.01" min="0.01" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></div>
+                <div class="mt-4"><label for="repasse-data" class="block text-sm font-medium text-gray-700">Data do Repasse</label><input type="date" id="repasse-data" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></div>
+                <div class="mt-4"><label for="obs-repasse" class="block text-sm font-medium text-gray-700">Observações (ex: comprovativo)</p><textarea id="obs-repasse" rows="2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"></textarea></div>
+                <div class="flex justify-end mt-6 space-x-4">
+                    <button type="button" id="btn-cancel-repasse" class="bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300">Cancelar</button>
+                    <button type="submit" class="bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-purple-700 flex items-center justify-center gap-2">
+                        <span class="btn-text">Registar</span>
+                        <div class="btn-spinner hidden"></div>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Container para Notificações -->
+    <div id="notification-container"></div>
+
+    <!-- Firebase SDK e Lógica Principal -->
+    <script type="module">
+        // Importações do Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, addDoc, onSnapshot, collection, query, where, writeBatch, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const AppController = {
+            state: {
+                userId: null,
+                userEmail: null,
+                isAuthReady: false,
+                isFirebaseInitialized: false,
+                acordos: [],
+                searchTerm: '',
+                acordoDetailsCache: new Map(),
+                chartInstance: null,
+            },
+
+            elements: {
+                authContainer: document.getElementById('auth-container'),
+                appContainer: document.getElementById('app-container'),
+                loginView: document.getElementById('login-view'),
+                registerView: document.getElementById('register-view'),
+                loadingScreen: document.getElementById('loading-screen'),
+                authStatus: document.getElementById('auth-status'),
+                acordosList: document.getElementById('acordos-list'),
+                searchInput: document.getElementById('search-acordos'),
+                dashboard: {
+                    receitaMes: document.getElementById('receita-mes'),
+                    parcelasAtraso: document.getElementById('parcelas-atraso'),
+                    aReceber30d: document.getElementById('a-receber-30d'),
+                    pendenteRepasse: document.getElementById('pendente-repasse'),
+                    proximosVencimentos: document.getElementById('proximos-vencimentos'),
+                    chartCanvas: document.getElementById('receitaMensalChart'),
+                },
+                forms: {
+                    login: document.getElementById('form-login'),
+                    register: document.getElementById('form-register'),
+                    acordo: document.getElementById('form-acordo'),
+                    pagamento: document.getElementById('form-pagamento'),
+                    repasse: document.getElementById('form-repasse'),
+                }
+            },
+
+            init() {
+                const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'gestao-acordos-default';
+
+                if (!firebaseConfig) {
+                    document.body.innerHTML = `<div class="text-center p-8 text-red-600 font-semibold">Erro Crítico: Configuração do Firebase não encontrada.<br>Certifique-se de que está a fazer o deploy para o Firebase Hosting para que as chaves de configuração sejam injetadas automaticamente.</div>`;
+                    return;
+                }
+                
+                this.services.firebase.init(firebaseConfig, appId);
+                this.listeners.init();
+            },
+
+            handleAuthStateChange(user) {
+                if (user) {
+                    this.state.userId = user.uid;
+                    this.state.userEmail = user.email;
+                    this.state.isAuthReady = true;
+                    this.elements.authStatus.innerHTML = `<p class="text-gray-600">Utilizador: <span class="font-semibold">${user.email}</span></p>`;
+                    this.services.firebase.listenToAcordos(this.onAcordosUpdate.bind(this));
+                    this.ui.showAppView();
+                } else {
+                    this.state.userId = null;
+                    this.state.userEmail = null;
+                    this.state.isAuthReady = false;
+                    this.state.acordos = [];
+                    this.ui.renderAcordosList();
+                    this.ui.showAuthView();
+                }
+            },
+            
+            onAcordosUpdate(acordos) {
+                this.state.acordos = acordos;
+                this.state.acordoDetailsCache.clear();
+                this.ui.renderAcordosList();
+                this.ui.updateDashboard();
+                this.ui.toggleLoading(false);
+            },
+            
+            async getAcordoById(acordoId) {
+                return this.state.acordos.find(a => a.id === acordoId);
+            },
+
+            utils: {
+                formatCurrency: (value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0),
+                formatDate: (date) => {
+                    if (!date) return 'N/A';
+                    const d = date.toDate ? date.toDate() : new Date(date);
+                    return d.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+                },
+                parseCurrency: (value) => Number(String(value).replace(/[^0-9,-]+/g, "").replace(",", ".")),
+            },
+
+            services: {
+                firebase: {
+                    db: null,
+                    auth: null,
+                    appId: null,
+
+                    init(config, appId) {
+                        if (AppController.state.isFirebaseInitialized) return;
+                        try {
+                            const firebaseApp = initializeApp(config);
+                            this.auth = getAuth(firebaseApp);
+                            this.db = getFirestore(firebaseApp);
+                            this.appId = appId;
+                            AppController.state.isFirebaseInitialized = true;
+                            onAuthStateChanged(this.auth, AppController.handleAuthStateChange.bind(AppController));
+                        } catch (error) {
+                            console.error("Firebase Initialization Error:", error);
+                            AppController.ui.showNotification("Erro crítico na inicialização.", "error");
+                        }
+                    },
+                    
+                    async register(email, password) {
+                        try {
+                            await createUserWithEmailAndPassword(this.auth, email, password);
+                            return { success: true };
+                        } catch (error) {
+                            return { success: false, message: this.getAuthErrorMessage(error) };
+                        }
+                    },
+
+                    async login(email, password) {
+                        try {
+                            await signInWithEmailAndPassword(this.auth, email, password);
+                            return { success: true };
+                        } catch (error) {
+                            return { success: false, message: this.getAuthErrorMessage(error) };
+                        }
+                    },
+
+                    async logout() {
+                        try {
+                            await signOut(this.auth);
+                        } catch (error) {
+                            console.error("Logout Error:", error);
+                            AppController.ui.showNotification("Erro ao sair da conta.", "error");
+                        }
+                    },
+
+                    getAuthErrorMessage(error) {
+                        switch (error.code) {
+                            case 'auth/email-already-in-use': return 'Este e-mail já está em uso.';
+                            case 'auth/invalid-email': return 'Formato de e-mail inválido.';
+                            case 'auth/weak-password': return 'A senha deve ter pelo menos 6 caracteres.';
+                            case 'auth/user-not-found':
+                            case 'auth/wrong-password': 
+                            case 'auth/invalid-credential': return 'E-mail ou senha incorretos.';
+                            default: return 'Ocorreu um erro. Tente novamente.';
+                        }
+                    },
+                    
+                    listenToAcordos(onUpdateCallback) {
+                        if (!AppController.state.userId) return;
+                        const acordosQuery = query(collection(this.db, `artifacts/${this.appId}/users/${AppController.state.userId}/acordos`));
+                        onSnapshot(acordosQuery, async (snapshot) => {
+                            AppController.ui.toggleLoading(true);
+                            try {
+                                const acordoPromises = snapshot.docs.map(async (doc) => {
+                                    const acordo = { id: doc.id, ...doc.data() };
+                                    const pagamentosQuery = query(collection(this.db, `artifacts/${this.appId}/users/${AppController.state.userId}/pagamentos`), where("acordoId", "==", acordo.id));
+                                    const repassesQuery = query(collection(this.db, `artifacts/${this.appId}/users/${AppController.state.userId}/repasses`), where("acordoId", "==", acordo.id));
+                                    const [pagamentosSnap, repassesSnap] = await Promise.all([getDocs(pagamentosQuery), getDocs(repassesQuery)]);
+                                    acordo.pagamentos = pagamentosSnap.docs.map(d => ({id: d.id, ...d.data()}));
+                                    acordo.repasses = repassesSnap.docs.map(d => ({id: d.id, ...d.data()}));
+                                    return acordo;
+                                });
+                                const acordos = await Promise.all(acordoPromises);
+                                onUpdateCallback(acordos);
+                            } catch (error) {
+                                console.error("Error processing acordos snapshot:", error);
+                                AppController.ui.showNotification("Erro ao processar os dados dos acordos.", "error");
+                                AppController.ui.toggleLoading(false);
+                            }
+                        }, (error) => {
+                            console.error("Error listening to acordos:", error);
+                            AppController.ui.showNotification("Erro ao carregar acordos.", "error");
+                            AppController.ui.toggleLoading(false);
+                        });
+                    },
+                    
+                    async saveData(formType, data, parcelasData = []) {
+                        if (!AppController.state.isAuthReady) {
+                            AppController.ui.showNotification("Não autenticado. Recarregue a página.", "error");
+                            return false;
+                        }
+                        const batch = writeBatch(this.db);
+                        try {
+                            if (formType === 'acordo') {
+                                const acordoRef = doc(collection(this.db, `artifacts/${this.appId}/users/${AppController.state.userId}/acordos`));
+                                batch.set(acordoRef, data);
+                                parcelasData.forEach((parcela) => {
+                                    const parcelaRef = doc(collection(this.db, `artifacts/${this.appId}/users/${AppController.state.userId}/acordos/${acordoRef.id}/parcelas`));
+                                    batch.set(parcelaRef, parcela);
+                                });
+                            } else if (formType === 'pagamento') {
+                                const novoPagamentoRef = doc(collection(this.db, `artifacts/${this.appId}/users/${AppController.state.userId}/pagamentos`));
+                                batch.set(novoPagamentoRef, data);
+                                const parcelasQuery = query(collection(this.db, `artifacts/${this.appId}/users/${AppController.state.userId}/acordos/${data.acordoId}/parcelas`), where("status", "==", "Pendente"));
+                                const parcelasSnap = await getDocs(parcelasQuery);
+                                if (!parcelasSnap.empty) {
+                                    const parcelaMaisAntiga = parcelasSnap.docs.sort((a, b) => a.data().num - b.data().num)[0];
+                                    const parcelaRef = doc(this.db, `artifacts/${this.appId}/users/${AppController.state.userId}/acordos/${data.acordoId}/parcelas`, parcelaMaisAntiga.id);
+                                    batch.update(parcelaRef, { status: 'Pago' });
+                                }
+                            } else if (formType === 'repasse') {
+                                const novoRepasseRef = doc(collection(this.db, `artifacts/${this.appId}/users/${AppController.state.userId}/repasses`));
+                                batch.set(novoRepasseRef, data);
+                            }
+                            await batch.commit();
+                            return true;
+                        } catch (error) {
+                            console.error(`Error saving ${formType}:`, error);
+                            AppController.ui.showNotification(`Erro ao salvar ${formType}.`, "error");
+                            return false;
+                        }
+                    }
+                }
+            },
+
+            ui: {
+                showAuthView() {
+                    AppController.elements.authContainer.classList.remove('hidden');
+                    AppController.elements.appContainer.classList.add('hidden');
+                    this.toggleLoading(false);
+                },
+                
+                showAppView() {
+                    AppController.elements.authContainer.classList.add('hidden');
+                    AppController.elements.appContainer.classList.remove('hidden');
+                },
+                
+                toggleLoading(isLoading, button = null) {
+                    if (button) {
+                        button.disabled = isLoading;
+                        const text = button.querySelector('.btn-text');
+                        const spinner = button.querySelector('.btn-spinner');
+                        if(text) text.classList.toggle('hidden', isLoading);
+                        if(spinner) spinner.classList.toggle('hidden', !isLoading);
+                    } else {
+                        AppController.elements.loadingScreen.classList.toggle('hidden', !isLoading);
+                        AppController.elements.loadingScreen.classList.toggle('flex', isLoading);
+                    }
+                },
+                showNotification(message, type = 'info') {
+                    const toast = document.createElement('div');
+                    toast.className = `toast ${type}`;
+                    toast.textContent = message;
+                    AppController.elements.notificationContainer.appendChild(toast);
+                    setTimeout(() => toast.classList.add('show'), 10);
+                    setTimeout(() => {
+                        toast.classList.remove('show');
+                        toast.addEventListener('transitionend', () => toast.remove());
+                    }, 4000);
+                },
+                openModal(modalId, setupFn) {
+                    const modal = document.getElementById(modalId);
+                    if (modal) {
+                        if (setupFn) setupFn();
+                        modal.classList.remove('hidden');
+                        modal.classList.add('flex');
+                    }
+                },
+                closeModal(modalId) {
+                    const modal = document.getElementById(modalId);
+                    if (modal) {
+                        modal.classList.add('hidden');
+                        modal.classList.remove('flex');
+                    }
+                },
+                renderAcordosList() {
+                    const { acordos, searchTerm } = AppController.state;
+                    const { acordosList } = AppController.elements;
+                    const { formatCurrency } = AppController.utils;
+                    
+                    const termoBusca = searchTerm.toLowerCase();
+                    const acordosFiltrados = acordos.filter(acordo => 
+                        (acordo.clienteNome || '').toLowerCase().includes(termoBusca) ||
+                        (acordo.processoCaso || '').toLowerCase().includes(termoBusca)
+                    );
+
+                    if (acordosFiltrados.length === 0) {
+                        acordosList.innerHTML = `<div class="p-8 text-center text-gray-500">${acordos.length > 0 ? 'Nenhum acordo encontrado para a sua busca.' : 'Nenhum acordo cadastrado.'}</div>`;
+                        return;
+                    }
+
+                    acordosList.innerHTML = acordosFiltrados.map(acordo => {
+                        const totalRecebido = acordo.pagamentos.reduce((sum, p) => sum + p.valor, 0);
+                        const honorariosPagos = acordo.pagamentos.reduce((sum, p) => sum + p.valorParaHonorarios, 0);
+                        const valorParaClienteTotal = acordo.pagamentos.reduce((sum, p) => sum + p.valorParaCliente, 0);
+                        const totalRepassado = acordo.repasses.reduce((sum, r) => sum + r.valor, 0);
+                        const pendenteRepasse = valorParaClienteTotal - totalRepassado;
+                        const progressoTotal = acordo.valorTotal > 0 ? (totalRecebido / acordo.valorTotal) * 100 : 0;
+                        const progressoHonorarios = acordo.valorHonorarios > 0 ? (honorariosPagos / acordo.valorHonorarios) * 100 : 0;
+                        return `
+                            <div class="border-t border-gray-200 p-4 hover:bg-gray-50 transition">
+                                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
+                                    <div class="md:col-span-2"><p class="font-bold text-lg text-blue-700">${acordo.clienteNome}</p><p class="text-sm text-gray-500">Proc: ${acordo.processoCaso}</p></div>
+                                    <div class="md:col-span-2">
+                                        <div class="mb-2"><div class="flex justify-between text-xs mb-1"><span>Progresso Total (${formatCurrency(totalRecebido)} de ${formatCurrency(acordo.valorTotal)})</span><span>${progressoTotal.toFixed(1)}%</span></div><div class="w-full bg-gray-200 rounded-full h-2.5"><div class="bg-blue-600 h-2.5 rounded-full" style="width: ${progressoTotal}%"></div></div></div>
+                                        <div><div class="flex justify-between text-xs mb-1"><span>Honorários Quitado (${formatCurrency(honorariosPagos)} de ${formatCurrency(acordo.valorHonorarios)})</span><span>${progressoHonorarios.toFixed(1)}%</span></div><div class="w-full bg-gray-200 rounded-full h-2.5"><div class="bg-green-600 h-2.5 rounded-full" style="width: ${progressoHonorarios}%"></div></div></div>
+                                    </div>
+                                    <div class="text-center md:text-right bg-blue-50 p-3 rounded-lg"><p class="text-sm font-medium text-blue-800">Pendente Repasse</p><p class="font-bold text-xl text-blue-800">${formatCurrency(pendenteRepasse)}</p></div>
+                                </div>
+                                <div class="mt-4 flex flex-wrap gap-2">
+                                    <button class="btn-registrar-pagamento bg-green-500 text-white px-3 py-1 text-sm rounded-md hover:bg-green-600" data-id="${acordo.id}">+ Registar Pagamento</button>
+                                    <button class="btn-registrar-repasse bg-purple-500 text-white px-3 py-1 text-sm rounded-md hover:bg-purple-600" data-id="${acordo.id}" data-cliente="${acordo.clienteNome}" data-pendente="${pendenteRepasse}">+ Registar Repasse</button>
+                                    <button class="btn-ver-detalhes bg-gray-200 text-gray-700 px-3 py-1 text-sm rounded-md hover:bg-gray-300" data-id="${acordo.id}">Ver Detalhes</button>
+                                </div>
+                                <div id="detalhes-${acordo.id}" class="hidden mt-4 p-4 bg-gray-50 rounded-lg"></div>
+                            </div>`;
+                    }).join('');
+                },
+                async updateDashboard() { /* ... */ },
+                renderChart(receitaPorMes) { /* ... */ },
+                async renderAcordoDetails(acordoId) { /* ... */ },
+            },
+
+            listeners: {
+                init() {
+                    AppController.elements.forms.login.addEventListener('submit', this.handleLogin);
+                    AppController.elements.forms.register.addEventListener('submit', this.handleRegister);
+                    document.getElementById('btn-logout').addEventListener('click', () => AppController.services.firebase.logout());
+                    document.getElementById('show-register-view').addEventListener('click', e => {
+                        e.preventDefault();
+                        AppController.elements.loginView.classList.add('hidden');
+                        AppController.elements.registerView.classList.remove('hidden');
+                    });
+                    document.getElementById('show-login-view').addEventListener('click', e => {
+                        e.preventDefault();
+                        AppController.elements.registerView.classList.add('hidden');
+                        AppController.elements.loginView.classList.remove('hidden');
+                    });
+                    // ... (outros listeners)
+                },
+
+                async handleLogin(e) {
+                    e.preventDefault();
+                    const email = e.target.querySelector('#login-email').value;
+                    const password = e.target.querySelector('#login-password').value;
+                    const result = await AppController.services.firebase.login(email, password);
+                    if (!result.success) {
+                        AppController.ui.showNotification(result.message, 'error');
+                    }
+                },
+
+                async handleRegister(e) {
+                    e.preventDefault();
+                    const email = e.target.querySelector('#register-email').value;
+                    const password = e.target.querySelector('#register-password').value;
+                    const result = await AppController.services.firebase.register(email, password);
+                    if (result.success) {
+                        AppController.ui.showNotification('Conta criada com sucesso! A entrar...', 'success');
+                    } else {
+                        AppController.ui.showNotification(result.message, 'error');
+                    }
+                },
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => AppController.init());
+    </script>
+</body>
+</html>
